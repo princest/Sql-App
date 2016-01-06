@@ -1,17 +1,17 @@
 # SQLAPP
 SQL to web application with inputs/ouputs.Easy to build ,integrate,customize your web application, just via SQL
 
-
-<DIV class=gut style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2"><H2>[原创]敏捷开发!! 外挂敏捷开发平台,只用会写SQL语句可以发布外挂,开发就这么简单! !</H2>
-<DIV id=threadstamp_lmtj><IMG title=金帖 src="/qyld/images/zhut_lmtj.gif" width=100 align=absMiddle> </DIV>
-<DIV id=threadstamp_jh><IMG title=精华 src="/qyld/images/zhut_jh.gif" width=100 align=absMiddle> </DIV>
-<DIV class=gut_g style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2">
-<H2><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">&nbsp;</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft yahei; COLOR: #337fe5">只要你会SQL语句,你就可以生成漂亮,功</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">能强大的web页面!!</SPAN> </H2>
+# 应用适宜范围
+  小型WEB应用:数据查阅,数据操控类应用,企业生产维护外挂等.
+<DIV class=gut style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2"><H2>[原创]极速开发!! 企业APP开发者平台,只用会写SQL语句可以发布数据操作类WEB应用,开发就这么简单! !</H2>
+<DIV style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2">
+<H2>
+    <SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">&nbsp;</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft yahei; COLOR: #337fe5">只要你会SQL语句,你就可以生成漂亮,功</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">能强大的web页面!!</SPAN> </H2>
 <H2>你可以: </H2>
 <DIV>
 <DIV>&nbsp; 1.能开发应用广泛的外挂, </DIV>
-<DIV>&nbsp;2.任意复杂度的外挂,比如向导型wizard,引导用户输入..... </DIV>
-<DIV>&nbsp;3.已有外挂的任意复杂度的集成,外挂嵌套外挂,模拟弹窗操作... </DIV>
+<DIV>&nbsp; 2.任意复杂度的外挂,比如向导型wizard,引导用户输入..... </DIV>
+<DIV>&nbsp; 3.已有外挂的任意复杂度的集成,外挂嵌套外挂,模拟弹窗操作... </DIV>
 <DIV>&nbsp; 4.管理自己的日常工作,把常见的操作做成web页面 </DIV>
 <DIV>&nbsp; 5.发布数据查询? 有人要数据清单?太简单了,发布一个SQL语句,自定义一些参数...简单! </DIV>
 <DIV>&nbsp; 6.还是数据变更?提供工具,自定义参数,限定参数格式,得心应手! </DIV>
