@@ -6,7 +6,7 @@ SQL to web application with inputs/ouputs.Easy to build ,integrate,customize you
 <DIV class=gut style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2"><H2>[原创]极速开发!! 企业APP开发者平台,只用会写SQL语句可以发布数据操作类WEB应用,开发就这么简单! !</H2>
 <DIV style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2">
 <H2>
-    <SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">&nbsp;</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft yahei; COLOR: #337fe5">只要你会SQL语句,你就可以生成漂亮,功</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">能强大的web页面!!</SPAN> </H2>
+    <SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">&nbsp;</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft yahei; COLOR: #337fe5">只要你会SQL语句,你就可以生成规范大方,功</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">能强大的web页面!!</SPAN> </H2>
 <H2>你可以: </H2>
 <DIV>
 <DIV>&nbsp; 1.能开发应用广泛的企业数据库"外挂"</DIV>
