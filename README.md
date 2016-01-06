@@ -33,12 +33,16 @@ MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
 <DIV>
 <DIV>&nbsp;先来几个简单的例子: </DIV>
 <DIV>---------------------- </DIV>
-<DIV>例子1. </DIV><SPAN style="BACKGROUND-COLOR: #dfc5a4"><SPAN style="COLOR: #337fe5; BACKGROUND-COLOR: #cccccc">select </SPAN><SPAN style="BACKGROUND-COLOR: #cccccc">* </SPAN><SPAN style="COLOR: #337fe5; BACKGROUND-COLOR: #cccccc">from&nbsp;</SPAN><SPAN style="BACKGROUND-COLOR: #cccccc">table1&nbsp;&nbsp;</SPAN><SPAN style="COLOR: #337fe5; BACKGROUND-COLOR: #cccccc">where </SPAN><SPAN style="BACKGROUND-COLOR: #cccccc">rownum &lt;= :xh</SPAN></SPAN> 
+<DIV>例子1. </DIV>
+```sql
+select * from table1  where rownum <= :xh 
+```
 <DIV>默认生成 </DIV>
 <DIV>&nbsp;<IMG alt="" src="http://ww1.sinaimg.cn/mw690/56f33ec4gw1ebv0nzj8fdj20da04ot8v.jpg" width=478 align=absMiddle height=168> </DIV>
 <DIV>例子2. </DIV>
-<DIV><SPAN style="BACKGROUND-COLOR: #cccccc"><SPAN style="COLOR: #337fe5">update </SPAN>table2 <SPAN style="COLOR: #337fe5">set </SPAN>attr &nbsp;=&nbsp;:val&nbsp; <SPAN style="COLOR: #337fe5">where&nbsp; </SPAN>key=:key;</SPAN> </DIV>
-<DIV>&nbsp; </DIV>
+```sql
+update table2 set attr  = :val  where  key=:key; 
+```
 <DIV>对上面的语句中参数<SPAN style="COLOR: #e53333">val</SPAN>设置数据源为 </DIV>
 <DIV>&nbsp;<IMG alt="" src="http://ww4.sinaimg.cn/mw690/56f33ec4gw1ebv0w045w3j2077028748.jpg" width=259 align=absMiddle height=80> </DIV>
 <DIV>或者 </DIV>
@@ -47,7 +51,16 @@ MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
 <DIV>&nbsp; </DIV>
 <DIV>&nbsp;<IMG alt="" src="http://ww2.sinaimg.cn/mw690/56f33ec4gw1ebv0tiywepj20dx03bdfx.jpg" width=501 align=absMiddle height=119> </DIV>
 <DIV>3.例子3. </DIV>
-<DIV><SPAN style="COLOR: #337fe5; BACKGROUND-COLOR: #cccccc">declare </SPAN><BR><SPAN style="BACKGROUND-COLOR: #cccccc">&nbsp; date1 <SPAN style="COLOR: #9933e5">date</SPAN>;</SPAN><BR><SPAN style="BACKGROUND-COLOR: #cccccc">&nbsp; date2 <SPAN style="COLOR: #9933e5">date</SPAN>;</SPAN><BR><SPAN style="COLOR: #337fe5; BACKGROUND-COLOR: #cccccc">begin</SPAN><BR><SPAN style="BACKGROUND-COLOR: #cccccc">&nbsp; date1:= <SPAN style="COLOR: #337fe5">to_date</SPAN>(:dt1,'yyyy-mm-dd hh24:mi:ss');</SPAN><BR><SPAN style="BACKGROUND-COLOR: #cccccc">&nbsp; date2:= <SPAN style="COLOR: #337fe5">to_date</SPAN>(:dt2,'yyyy-mm-dd hh24:mi:ss');</SPAN><BR><SPAN style="BACKGROUND-COLOR: #cccccc">&nbsp; DBMS_OUTPUT.PUT_LINE('相差结果='|| wxhf_time_eclipse(date2,date1)); </SPAN><BR><SPAN style="BACKGROUND-COLOR: #cccccc"><SPAN style="COLOR: #337fe5">end</SPAN>;</SPAN> </DIV>
+```sql
+declare 
+  date1 date;
+  date2 date;
+begin
+  date1:= to_date(:dt1,'yyyy-mm-dd hh24:mi:ss');
+  date2:= to_date(:dt2,'yyyy-mm-dd hh24:mi:ss');
+  DBMS_OUTPUT.PUT_LINE('相差结果='|| wxhf_time_eclipse(date2,date1)); 
+end; 
+```
 <DIV>自动生成的参数界面图 </DIV>
 <DIV><IMG alt="" src="http://ww3.sinaimg.cn/mw690/56f33ec4gw1ebv14nx02gj208b09ewf1.jpg" width=299 align=absMiddle height=338> </DIV>
 <DIV>执行结果 </DIV>
@@ -63,7 +76,6 @@ MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
 <DIV>&nbsp;&nbsp;&nbsp;&nbsp; 外挂系统是系统的补充,所以必须建立在对原有系统的模型的理解基础之上,外挂存在的意义这里不做累述,只对其如何敏捷开发提出新的想法. </DIV>
 <DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;开发外挂,有很多种方式,开发C/S,B/S各种程序,但是最终是一个程序解决一个功能单元,在实际生产中,大多数外挂类应用均基于数据库.可以这么说,程序的最终目的,是根据预期的参数,对目标数据进行增删查改,通过简单SQL语句,或者嵌套的存储过程. </DIV>
 <DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 有没有可能开发一个外挂平台,可以跨平台,跨数据库,基于SQL语义,进行敏捷开发呢? </DIV>
-<DIV>答案显然是:有. </DIV>
 <DIV></DIV>
 <DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 下面将介绍由楼主开发的”敏捷外挂开发平台”,支持开发人员对目标程序的输入参数进行风格自定义,参数之间的联动关系即可自定义设置;这些设置无须编程,只需遵循向导, </DIV>
 <DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 而对输出参数,也可以表格型输出,或者文本格式的输出(捕获数据库控制台输出),在高级应用中,表格型输出,亦可对特定的字段绑定自定义连接. </DIV>
