@@ -9,16 +9,14 @@ SQL to web application with inputs/ouputs.Easy to build ,integrate,customize you
     <SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">&nbsp;</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft yahei; COLOR: #337fe5">只要你会SQL语句,你就可以生成漂亮,功</SPAN><SPAN style="FONT-SIZE: 12px; FONT-FAMILY: microsoft &#10;yahei; COLOR: #337fe5">能强大的web页面!!</SPAN> </H2>
 <H2>你可以: </H2>
 <DIV>
-<DIV>&nbsp; 1.能开发应用广泛的外挂, </DIV>
-<DIV>&nbsp; 2.任意复杂度的外挂,比如向导型wizard,引导用户输入..... </DIV>
+<DIV>&nbsp; 1.能开发应用广泛的企业数据库"外挂"</DIV>
+<DIV>&nbsp; 2.多种复杂度的外挂,比如向导型wizard,引导用户输入..... </DIV>
 <DIV>&nbsp; 3.已有外挂的任意复杂度的集成,外挂嵌套外挂,模拟弹窗操作... </DIV>
 <DIV>&nbsp; 4.管理自己的日常工作,把常见的操作做成web页面 </DIV>
 <DIV>&nbsp; 5.发布数据查询? 有人要数据清单?太简单了,发布一个SQL语句,自定义一些参数...简单! </DIV>
 <DIV>&nbsp; 6.还是数据变更?提供工具,自定义参数,限定参数格式,得心应手! </DIV>
-<DIV>&nbsp; 7.丰富的,可见即所得的权限控制... </DIV>
-<DIV>&nbsp; 8.可拖曳的菜单,目录管理,轻松管理! </DIV>
-<DIV>&nbsp; 9.完备的操作日志 ,无论是谁修改外挂,还是执行外挂,还是执行查询,导出数据多少,IP多少,应由具有. </DIV>
-<DIV>&nbsp; 10.丰富的扩展功能 </DIV>
+<DIV>&nbsp; 7.可拖曳的菜单,目录管理,轻松管理! </DIV>
+<DIV>&nbsp; 8.丰富的扩展功能 </DIV>
 <DIV>.....更多的由你自由发挥... </DIV></DIV>&nbsp; 
 <DIV>
 <DIV>&nbsp;先来几个简单的例子: </DIV>
