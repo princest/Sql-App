@@ -1,5 +1,6 @@
 # SQLAPP
 SQL to web application with inputs/ouputs.Easy to build ,integrate,customize your web application, just via SQL
+## inspired by Oracle Application Express (Apex)
 
 # 应用适宜范围
   小型WEB应用:数据查阅,数据操控类应用,企业生产维护外挂等.
