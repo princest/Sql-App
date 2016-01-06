@@ -9,7 +9,7 @@ SQL to web application with inputs/ouputs.Easy to build ,integrate,customize you
 ORACLE为 DBMS_SQL包
 MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
 3. 主要算法:
-参数异步联动用到 “无回路有向图算法”.
+参数依赖联动使用DAG  “无回路有向图算法”.
 4. 前端组件:
    angularjs + ui-state + restangular
 
