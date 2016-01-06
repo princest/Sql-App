@@ -1,7 +1,9 @@
 # SQLAPP
 SQL to web application with inputs/ouputs.Easy to build ,integrate,customize your web application, just via SQL
 ## inspired by Oracle Application Express (Apex)
+
 #  主要技术栈
+
 1. .net WebForms/MVC/WEBAPI hybrids
 2. 数据库智能:引用对应数据库的动态SQL分析包.
 ORACLE为 DBMS_SQL包
@@ -10,6 +12,7 @@ MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
 参数异步联动用到 “无回路有向图算法”.
 4. 前端组件:
    angularjs + ui-state + restangular
+
 # 应用适宜范围
   小型WEB应用:数据查阅,数据操控类应用,企业生产维护外挂等.
 <DIV class=gut style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2"><H2>[原创]极速开发!! 企业APP开发者平台,只用会写SQL语句可以发布数据操作类WEB应用,开发就这么简单! !</H2>
@@ -156,15 +159,17 @@ MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
 <DIV>&nbsp; 
 <DIV>3)源处理器”字段”外观效果及事件绑定 </DIV>
 <DIV><IMG alt="" src="http://ww2.sinaimg.cn/mw690/56f33ec4gw1ebuvd4z4vvj20pr0fwteu.jpg" width=690 align=absMiddle height=425> </DIV>
-<DIV>&nbsp; 
-<DIV><B><SPAN style="FONT-SIZE: 24px">4.&nbsp; </SPAN></B><B><SPAN style="FONT-SIZE: 24px">主要技术及扩展</SPAN></B><B></B> </DIV>
-<DIV>1. 敏捷平台实现层: .net WebForms技术,AJAX,微软AJAX Extensions,正则表达式等 </DIV>
-<DIV>2. 数据库智能:引用对应数据库的动态SQL分析包. </DIV>
-<DIV>ORACLE为 DBMS_SQL包 </DIV>
-<DIV>MSSQL则用到了EXECUTE 和 SP_EXECUTESQL </DIV>
-<DIV>3. 主要算法: </DIV>
-<DIV>参数异步联动用到 “无回路有向图算法”. </DIV><BR>
-<DIV align=left><SPAN style="FONT-SIZE: 24px"><STRONG>5. 主要模型</STRONG></SPAN> </DIV>
+#  主要技术栈
+1. .net WebForms/MVC/WEBAPI hybrids
+2. 数据库智能:引用对应数据库的动态SQL分析包.
+ORACLE为 DBMS_SQL包
+MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
+3. 主要算法:
+参数异步联动用到 “无回路有向图算法”.
+4. 前端组件:
+   angularjs + ui-state + restangular
+
+
 <DIV><B>1.</B><B>处理器模型AP_HANDLERS</B> </DIV>
 <TABLE cellSpacing=0 cellPadding=0 width=472 border=0>
 <TBODY>
