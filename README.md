@@ -1,7 +1,15 @@
 # SQLAPP
 SQL to web application with inputs/ouputs.Easy to build ,integrate,customize your web application, just via SQL
 ## inspired by Oracle Application Express (Apex)
-
+#  主要技术栈
+1. .net WebForms/MVC/WEBAPI hybrids
+2. 数据库智能:引用对应数据库的动态SQL分析包.
+ORACLE为 DBMS_SQL包
+MSSQL则用到了EXECUTE 和 SP_EXECUTESQL
+3. 主要算法:
+参数异步联动用到 “无回路有向图算法”.
+4. 前端组件:
+   angularjs + ui-state + restangular
 # 应用适宜范围
   小型WEB应用:数据查阅,数据操控类应用,企业生产维护外挂等.
 <DIV class=gut style="LETTER-SPACING: 1pt; LINE-HEIGHT: 2"><H2>[原创]极速开发!! 企业APP开发者平台,只用会写SQL语句可以发布数据操作类WEB应用,开发就这么简单! !</H2>
