@@ -1,0 +1,109 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>showWoTab</title>
+
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/app/trbackground.css" rel="stylesheet" />
+    <link href="~/Content/app/abc.css" rel="stylesheet" />
+    <link href="~/Scripts/lib/angular-ui-grid/ui-grid.css" rel="stylesheet" />
+</head>
+<body ng-app="sotabApp">
+    <div ng-controller="sotabCtrl">
+
+
+
+        <tabset class="col-md-12 col-xs-12">
+
+            <tab ng-repeat="(r,tab) in tabs" heading="{{tab.heading}}" active="tab.active" select="select(r)">
+                <img src="@Url.Content("~/Content/Images/ajax-loader-2.gif")" ng-show="tab.loading.v" />
+                <div ng-include src="'tab'+r+'.html'">
+                </div>
+            </tab>
+
+
+        </tabset>
+        <script type="text/ng-template" id="tab0.html">
+            <!--工单基本信息-->
+            <h1>基本信息:</h1>
+            <h2>页面开发中...</h2>
+        </script>
+        <script type="text/ng-template" id="tab1.html">
+            <!--自动接口-->
+            <h1>SPJK </h1>
+            <h2>暂未开放...</h2>
+        </script>
+        <script type="text/ng-template" id="tab2.html">
+            <!--处理日志-->
+            <span class="btn btn-primary" ng-click="toggleFilteringWO()">过滤</span>
+            <div class="gridlg" ui-grid="tabs[2].gridOptions" ui-grid-resize-columns ui-grid-edit ui-grid-save-state ui-grid-move-columns ui-grid-exporter></div>
+
+        </script>
+
+    </div>
+</body>
+</html>
+
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/Scripts/lib/angular/angular.js"></script>
+<script src="~/Scripts/lib/angular/angular-animate.min.js"></script>
+<script src="~/Scripts/lib/angular/i18n/angular-locale_zh-cn.js"></script>
+<script src="~/Scripts/lib/angular-ui/ui-bootstrap-tpls.js"></script>
+
+<script src="~/Scripts/moment.js"></script>
+<script src="~/Scripts/moment-zh-cn.js"></script>
+<script src="~/Scripts/lib/angular/3rd/angular-moment.min.js"></script>
+<script src="~/Scripts/lib/angular-ui-grid/ui-grid.js"></script>
+<script src="~/Scripts/lib/angular/3rd/angular-storage.min.js"></script>
+<script src="~/Scripts/Application/SoTabjs.js"></script>
+<script>
+
+    window.onresize = function () {
+        //your code        
+        $(".gridlg").width($(window).width() > 1200 || window.fullScreen ? 6000 : $(".gridlg").width());
+    }
+</script>
+<style>
+    .grid {
+        width: 1200px;
+        height: 550px;
+    }
+    .gridlg {
+        width: 800px;
+    }
+    .gridxs {
+        width: 500px;
+        height: 250px;
+    }
+
+    .my-custom-menu {
+        position: absolute;
+    }
+
+        .my-custom-menu .ui-grid-menu {
+            padding: 0px;
+        }
+
+        .my-custom-menu .ui-grid-menu-inner {
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+    .rotated {
+        transform: rotate(180deg);
+        -webkit-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+    }
+
+
+</style>

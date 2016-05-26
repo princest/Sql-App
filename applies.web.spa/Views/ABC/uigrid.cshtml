@@ -1,0 +1,327 @@
+﻿<!doctype html>
+<html ng-app="app">
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular-touch.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular-animate.js"></script>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+   <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/lib/angular-ui/ui-bootstrap-tpls.js"></script>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+
+    <script src="http://ui-grid.info/docs/grunt-scripts/csv.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/pdfmake.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/vfs_fonts.js"></script>
+    <script src="http://ui-grid.info/release/ui-grid-unstable.js"></script>
+    <link rel="stylesheet" href="http://ui-grid.info/release/ui-grid-unstable.css" type="text/css">
+    <link rel="stylesheet" href="main.css" type="text/css">
+    <style>
+        .grid {
+            width: 1500px;
+            height: 550px;
+        }
+    </style>
+</head>
+<body>
+    <div >
+        <div ng-controller="MainCtrl">
+            <div id="grid1" ui-grid="{ data: myData }" class="grid"></div>
+        </div>
+        <div ng-controller="sotabCtrl">
+            <tabset>
+
+                <tab ng-repeat="(r,tab) in tabs" heading="{{tab.heading}}" active="tab.active" select="select(r)">
+                    <img src="@Url.Content("~/Content/Images/ajax-loader-2.gif")" ng-show="tab.loading.v" />
+                    <div ng-include src="'tab'+r+'.html'">
+                    </div>
+                </tab>
+
+            </tabset>
+            <script type="text/ng-template" id="tab0.html">
+                <!--工单基本信息-->
+                <h1>基本信息:</h1>
+                <h2>页面开发中...</h2>
+            </script>
+            <script type="text/ng-template" id="tab1.html">
+                <!--自动接口-->
+                <h1>SPJK </h1>
+                <h2>暂未开放...</h2>
+            </script>
+            <script type="text/ng-template" id="tab2.html">
+                <!--处理日志-->
+
+                <div ui-grid="{ data: tabs[2].gridOptions.data }" class="grid"></div>
+
+
+            </script>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    var app = angular.module('app', ['ngTouch', 'ui.grid']);
+
+    app.controller('MainCtrl', ['$scope', function ($scope) {
+
+        $scope.myData = [
+          {
+              "firstName": "Cox",
+              "lastName": "Carney",
+              "company": "Enormo",
+              "employed": true
+          },
+          {
+              "firstName": "Lorraine",
+              "lastName": "Wise",
+              "company": "Comveyer",
+              "employed": false
+          },
+          {
+              "firstName": "Nancy",
+              "lastName": "Waters",
+              "company": "Fuelton",
+              "employed": false
+          }
+        ];
+    }]);
+
+
+
+
+    function httpexeption(e) {
+        var s = {};//e.data为空,或者不包含<
+        if (!e.data)
+            s.data = "";
+        else
+            if (typeof (e.data) == 'string')
+                s.data = (-1 == e.data.indexOf('<')) ? e.data : e.data.match(/<title>([^<]+)/i)[1];
+            else {
+                s.data = e.data;
+            }
+        s.statusText = e.statusText;
+        s.status = e.status;
+        //console.log('--------', e, s);
+        return JSON.stringify(s, null, 2);
+    }
+
+    function getdatestring(dstring, format) {
+        var date;
+        //console.log('s--/date/---datetime--', dstring, typeof (dstring), date);
+        if (typeof (dstring) == 'string') {
+            //return moment(dstring).format(format);
+            //老方法
+            var start = parseInt(dstring.replace(/\/Date\((\d+)\)\//gi, "$1"));
+            date = new Date(start);
+            //return moment(date).format(format);
+            return date;
+            //return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+        }
+        return null;
+    }
+    function db_val_equal(v1, v2) {
+        var v1_ = (v1 === null || v1 === undefined) ? '' : v1,
+            v2_ = (v2 === null || v2 === undefined) ? '' : v2;
+        return v1_.toString() == v2_.toString();
+    }
+    function search_match(rv, v) {
+        if (v == '' || v == undefined) return true;
+        // v = v.toUpperCase();//.toUpperCase(); //大小写忽略
+        if (rv === undefined || rv === null)
+            return false;
+        else
+            return !!~rv.toString().indexOf(v);
+    }
+
+    app.config(function ($locationProvider) {
+        $locationProvider.html5Mode({
+            enabled: true,
+            requireBase: false
+        });
+    });
+    //app.module('wotabCtrl', ['ui.bootstrap', 'ui.bootstrap.datetimepicker', 'angularMoment', 'ngStorage'])
+
+    app.controller('sotabCtrl', function ($scope, $location, $http, $filter) {
+
+        
+        var params = $location.search(),
+            orderBy = $filter('orderBy');
+        var tabs = $scope.tabs = [
+            { 'heading': '申请单基本信息', loading: {}, datascope: {} },
+            { 'heading': '其他信息', loading: {}, datascope: {} },
+            { 'heading': '工单列表', loading: {}, datascope: {} },
+        ];
+        //$scope.currentTab = 2;
+        var funcs = [fun0, fun1, fun2];
+        $scope.select = function (idx) {
+            console.log(idx);
+            //$scope.currentTab = idx;
+            tabs[idx].active = true;
+            if (tabs[idx].loading.v === undefined) {
+                tabs[idx].loading.v = true;
+                funcs[idx](idx).finally(function () {
+                    if (tabs[idx].loading.v === true)
+                        tabs[idx].loading.v = false;
+                });
+
+            }
+        }
+        $scope.select(2);
+
+
+        //工单基本信息
+        function fun0(idx) {
+            return httpajax({
+                url: 'showso',
+                loading: tabs[idx].loading,
+                errorSay: '加载Wo工单详情失败,请重新加载:\n',
+                handledata: function (data) {
+                    var obj = {};
+                    for (var i = 0; i < data.names.length; i++) {
+                        obj[data.names[i]] = data.data[0][i];
+                    }
+                    //alert('数据处理中!' + JSON.stringify(obj));
+
+                }
+            })
+        }
+        //自动接口
+        function fun1(idx) {
+            return httpajax({
+                url: 'showspjk',
+                loading: tabs[idx].loading,
+                errorSay: '加载Wo加载接口指令详情失败,请重新加载:\n',
+                handledata: function (data) {
+                    //处理嵌套数据 -> ng-table
+                    //alert('数据处理中!');
+                    //var obj = {};
+                    //for (var i = 0; i < data.names.length; i++) {
+                    //    obj[data.names[i]] = data.data[0][i];
+                    //}
+                }
+            })
+        }
+        //处理日志
+        function fun2(idx) {
+            return httpajax({
+                url: 'showso',
+                loading: tabs[idx].loading,
+                errorSay: '加载申请单处理日志失败,请重新加载:\n',
+                handledata: function (data) {
+                    //处理嵌套数据 -> ng-table
+                    //alert('数据处理中!');
+                    //injectcubetable(data, tabs[idx].datascope);
+                    console.log('---------', params, data)
+
+                    var myData = pair(data);
+                    tabs[idx].gridOptions = {
+                        enableSorting: true,
+                        columnDefs: myData.def,
+                        data: myData.data
+                    };
+
+                    //
+                }
+            })
+        }
+
+
+
+
+        function pair(data) {
+            var pr = [], obj, def = [];
+            for (var d = 0; d < data.names.length; d++) {
+                def.push({ name: data.names[d], field: data.names[d] });
+            }
+            for (var i = 0; i < data.data.length; i++) {
+                obj = {};
+                for (var j = 0; j < data.names.length; j++)
+                    obj[data.names[j]] = data.data[i][j];
+                pr.push(obj);
+            }
+            return { data: pr, def: def };
+        }
+        function injectcubetable(data, datascope) {
+            datascope.readonlydata = data.data.map(function (e, i) {
+                return { d: e, ORI_ORD: i };
+            });
+            datascope.dscols = data.names;
+            datascope.cols_switcher = data.names.map(function () { return true; })
+            datascope.cols_sort_order = data.names.map(function () { return undefined; })
+            datascope.cols_query = data.names.map(function () { return '' })
+            datascope.arrow = datascope.arrow || function (d) {
+                if (d === undefined)
+                    return '';
+                if (d === false)
+                    return 'glyphicon glyphicon-chevron-up';
+                return 'glyphicon glyphicon-chevron-down';
+            };
+            datascope.order = datascope.order || function (pidx, reverse) {
+                if (pidx >= 0) {
+                    if (reverse === undefined)
+                        reverse = false;
+                    else if (reverse === false)
+                        reverse = true;
+                    else
+                        reverse = undefined;
+                    $scope.cols_sort_order[pidx] = reverse;
+                }
+                $scope.cols_sort_order.forEach(function (e, i) {
+                    if (i !== pidx) $scope.cols_sort_order[i] = undefined;
+                })
+                var fn, fn_;
+                if (true) { //只读模式 [],ORIG_ORD
+                    fn = function (r_) { return r_.d[pidx] }; //查询函数
+                    fn_ = function (r_) { return r_['ORI_ORD'] } //原始顺序
+                    $scope.readonlydata = orderBy($scope.readonlydata, reverse === undefined ? fn_ : fn, reverse);
+                } else {
+                    //fn = function (d) { return d.NEW[pidx] }; //查询函数
+                    fn = function (r_) { return r_.NEW[pidx] }; //查询函数
+                    fn_ = function (r_) { return r_['ORI_ORD'] }//原始顺序
+                    $scope.datatable = orderBy($scope.datatable, reverse === undefined ? fn_ : fn, reverse);
+                }
+
+            };
+            datascope.filterOut = datascope.filterOut || function (row, prpty) {
+                if (prpty && row.STATE == 'deleted') return true;
+                var tr = prpty ? row[prpty] : row;
+                //只要有一个列不匹配,就返回真
+                return tr.some(function (e, i) {
+                    return !search_match(e, datascope.cols_query[i]);
+                });
+            }
+        }
+        function httpajax(varity) {
+            console.log(varity, params);
+            return $http({ url: varity.url, method: varity.method || 'GET', params: varity.params || params })
+                .then(function (d) {
+                    if (d.data.ErrorMsg) {
+                        varity.loading.v = undefined;
+                        alert(varity.errorSay + d.data.ErrorMsg)
+                    } else {
+                        //console.log('lllllllll',varity.handledata, d);
+                        if (typeof (varity.handledata) == 'function')
+                            varity.handledata(d.data);
+                    }
+                }, function (e) {
+                    varity.loading.v = undefined;
+                    alert('查询调用失败' + httpexeption(e));
+                });
+        }
+
+    });
+    //app.directive('handle', function () {
+    //    return {
+    //        restrict: 'E',
+    //        transclude: true,
+    //        templateUrl: 'datatable-readonly.html',
+    //        //controllerAs:'vm',
+    //        scope: { vm: '=' },
+    //        link: function (scope, element, attrs) {
+    //            console.log('test-directive', scope, scope.$parent, attrs.vm)
+    //            //scope.dscols = scope.$parent.dscols;
+
+    //        }
+
+    //    };
+    //})
+</script>

@@ -1,0 +1,762 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>处理器!</title>
+    <link href="~/Content/bootstrap.css?v=4" rel="stylesheet" />
+    <link href="~/Content/bootstrap-theme.min.css" rel="stylesheet" />
+    <link href="~/Scripts/3rd/loading-bar/loading-bar.css?v=1" rel="stylesheet" />
+    <link href="~/Content/app/prettytable.css" rel="stylesheet" />
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+</head>
+
+
+<body style="font-family: Consolas,微软雅黑"
+      ng-app="Easyhandle" ng-controller="easyPLSQLCtrl">
+
+    <script>
+        function get_browser_info() {
+            var ua = navigator.userAgent, tem, M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+            if (/trident/i.test(M[1])) {
+                tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+                return { name: 'IE', version: (tem[1] || '') };
+            }
+            if (M[1] === 'Chrome') {
+                tem = ua.match(/\bOPR\/(\d+)/)
+                if (tem != null) { return { name: 'Opera', version: tem[1] }; }
+            }
+            M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+            if ((tem = ua.match(/version\/(\d+)/i)) != null) { M.splice(1, 1, tem[1]); }
+            return {
+                name: M[0],
+                version: M[1]
+            };
+        }
+        var browser = get_browser_info();
+        if (browser.name == 'MSIE' && parseInt(browser.version) <= 8) {
+            window.alert('你的浏览器属于古董浏览器'+browser.name+'('+browser.version+'),本系统已升级,您将无法使用新的功能!!\n请在一个月的过渡时间内完成更换为"现代浏览器"!')
+            var xdiv = document.createElement('div'),
+                xdivt = "<h1>你的浏览器"+browser.name+"("+browser.version+")太老了,本系统已升级,您将无法使用新的功能</h1><br><br><br><h2>请在一个月的过渡时间内,使用'现代浏览器'(如:ie9+,chrome,firefox..)!</h2><br/><h2 style='color:red'>...正在转向兼容版本</h2>";
+            xdiv.innerHTML = xdivt;
+            document.body.appendChild(xdiv);
+            setTimeout(function () {
+                xdiv.parentNode.removeChild(xdiv);
+                if(/\bid=/i.test(document.location.search))
+                    document.location.replace("../HandleEngine/HandlerEngineProvide.aspx" + document.location.search.replace(/\bid=/i,'HandlerID='));
+                if(/\bec=/i.test(document.location.search))
+                    document.location.replace("../HandleEngine/HandlerEngineProvide.aspx" + document.location.search.replace(/\bec=/i,'__entrycode='));
+            }, 2000)
+        }
+    </script>
+    <!--以下DIV 用于嵌入至div.modal供其他页面消费-->
+    <div class="ng-cloak">
+        <!--标题-->
+        <div class="alert-info">
+            <div style="font-size:large;line-height:2em;padding-left:2px">{{ handlerContext.handler.HANDLER_NAME}}</div>
+        </div>
+        <!--开发者-->
+        <div class="modal" id="dev" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">
+                            {{handlerContext.handler.HANDLER_NAME}}
+                            <button type="button" class="btn-lg btn-link pull-right" data-dismiss="modal">X</button>
+                        </h3>
+                    </div>
+                    <div class="modal-body">
+                        SQL代码:
+                        <pre>{{handlerContext.handler.SQL_BLOCK}}</pre>
+                        当前参数:
+                        <pre>{{paramviewer()|json}}</pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!--参数列表-->
+        <table class="table" ng-if="handlerContext.parameters.length">
+            <tbody ng-repeat="(i,p) in handlerContext.parameters">
+                <tr class="active">
+                    <td class="col-md-2">
+                        <span>{{p.PARAM_NAME_C}}</span>
+                        <span class="glyphicon glyphicon-question-sign text-primary" title="{{p.FORMAT_DESC}}" ng-if="p.FORMAT_DESC"></span>
+                    </td>
+                    <td class="col-md-8" ng-switch="p.CONTROL_TYPE">
+                        <div class="col-md-8">
+                            <!--日期时间控件-->
+                            <div ng-switch-when="TextBoxDateTime" style="max-width:37.5%">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" datetime-picker="yyyy-MM-dd HH:mm" is-open="CalandarOpen[p.PARAM_NAME]" show-button-bar="true"
+                                           ng-model="handlerContext.paramsScaledValues[p.PARAM_NAME]" />
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" ng-click="openCalandar($event,p.PARAM_NAME)">
+                                            <i class="glyphicon glyphicon-calendar"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                            <!--普通文本-->
+                            <div ng-switch-when="TextBox">
+                                <input class="form-control lead" ng-if="p.INTERLINK_EVENT=='onchange'" ng-init="handlerContext.paramsScaledValues[p.PARAM_NAME]=uVs[p.PARAM_NAME]||null" model-on-change="handlerContext.paramsScaledValues[p.PARAM_NAME]" />
+                                <input class="form-control lead" ng-if="p.INTERLINK_EVENT!='onchange'" ng-init="handlerContext.paramsScaledValues[p.PARAM_NAME]=uVs[p.PARAM_NAME]||null" ng-model="handlerContext.paramsScaledValues[p.PARAM_NAME]" />
+                            </div>
+                            <div ng-switch-when="TextArea">
+                                <!--<textarea ng-model="paramsScaledValues[p.PARAM_NAME]"></textarea>-->
+                                <textarea ng-if="p.INTERLINK_EVENT=='onchange='" ng-init="handlerContext.paramsScaledValues[p.PARAM_NAME]=uVs[p.PARAM_NAME]||null" model-on-change="handlerContext.paramsScaledValues[p.PARAM_NAME]"></textarea>
+                                <textarea ng-if="p.INTERLINK_EVENT!='onchange='" ng-init="handlerContext.paramsScaledValues[p.PARAM_NAME]=uVs[p.PARAM_NAME]||null" ng-model="handlerContext.paramsScaledValues[p.PARAM_NAME]"></textarea>
+                            </div>
+                            <div ng-switch-when="ListBoxMulti">
+                                <ul>
+                                    <li ng-repeat="(nvi,listitem) in OptionSelects[p.PARAM_NAME]">
+
+                                        <div class="checkbox">
+                                            <input type="checkbox" ng-change="Eval_CheckList_ToPlainVals(p.PARAM_NAME)" ng-model="OptionSelects[p.PARAM_NAME][nvi].selected" />{{listitem.Name  }} - {{listitem.Value  }}
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div ng-switch-when="TextBoxDDL">
+                                <select class="selector" ng-model="OptionSelecteds[p.PARAM_NAME]" ng-change="Eval_Select_ToPlainVals(p.PARAM_NAME)" ng-size="good_select_size(p.PARAM_NAME)"
+                                        ng-options="item.Name for item in OptionSelects[p.PARAM_NAME] | filter:{ Name: selectHelpers[p.PARAM_NAME]}">
+                                    <option value="" selected ng-disabled="OptionSelects[p.PARAM_NAME].length==1">--请选择--</option>
+                                </select>
+                                <input type="text" ng-model="selectHelpers[p.PARAM_NAME]" placeholder="选项较多,可过滤" ng-if="OptionSelects[p.PARAM_NAME].length>10" style="background-color:antiquewhite">
+                            </div>
+                            <div ng-switch-default></div>
+                        </div>
+                        <div class="col-md-3" ng-if="checkouts[p.PARAM_NAME].length">
+                            <div ng-repeat="err in checkouts[p.PARAM_NAME]" class="text-danger">
+                                * {{err}}
+                            </div>
+                        </div>
+                        <div class="col-md-1" ng-hide="checkouts[p.PARAM_NAME].length">
+                            <span class="text-warning" title="{{(p.IS_REQUIRED=='Y'?'必填':'可不填')}}">{{'['+(p.IS_REQUIRED=='Y'?'*':'-')+']'}}</span>
+                            <!--<span class="glyphicon text-primary" ng-class="{'Y':'glyphicon-asterisk','N':'glyphicon-minus'}[p.IS_REQUIRED]" title="(p.IS_REQUIRED=='Y'?'必填':'可不填')"></span>-->
+                        </div>
+                        @if (Session["Role"] != null && ((String[])Session["Role"]).Contains("PUMP_ADMIN"))
+                         {
+                            <div class="col-md-1">
+                                <div class="btn btn-link">
+                                    <a ng-href="~/HandleEngine/ParamSetter.aspx?ID={{p.HANDLER_PARAM_ID}}">配置参数</a>
+                                </div>
+                            </div>
+                        }
+                    </td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        <!--执行-->
+        <hr style="margin:0px 0px;padding:0;background-color:gray;height:0px" />
+
+        <div class="bg-active">
+            <div class="col-md-6 input-group">
+                <div class="btn btn-default" style="padding:4px 12px;color:mediumpurple;font-size:large" id='goRun' ng-click="run()"><b>Go!</b></div>
+                @if (Session["Role"] != null && ((String[])Session["Role"]).Contains("PUMP_ADMIN"))
+                {
+                    <div class="btn btn-link" style="padding:4px 6px;" data-toggle="modal" data-target="#dev">
+                        查看SQL及当前参数|
+                    </div>
+                    <div class="btn btn-link">
+                        <a ng-href="~/HandleEngine/NewHandler.aspx?HandlerID={{handlerContext.handler.HANDLER_ID}}">配置引擎|</a>
+                    </div>
+                    <div class="btn btn-link">
+                        <a ng-href="~/HandleEngine/HandlerDisplay.aspx?HandlerID={{handlerContext.handler.HANDLER_ID}}">参数(s)配置|</a>
+                    </div>
+                    <div class="btn btn-link">
+                        <a style="color:gray" ng-href="~/HandleEngine/HandlerEngineProvide.aspx?HandlerID={{handlerContext.handler.HANDLER_ID}}">老版入口</a>
+                    </div>
+
+                }
+            </div>
+
+        </div>
+        <hr style="margin:0px 0px 2px 0px;padding:0;background-color:gray;height:0px" />
+
+        <!--执行结果区/表格-->
+        <div ng-if="handlerContext.ExecutionIO">
+            <div role="log" ng-hide="isLoading">
+                <div ng-if="handlerContext.ExecutionIO.msg">
+                    <pre ng-class="{'bg-danger':handlerContext.ExecutionIO.hasError}" class="bg-success" ng-bind-html="handlerContext.ExecutionIO.msg"></pre>
+                </div>
+                <div ng-show="handlerContext.ExecutionIO.hasError">
+                    <pre>{{handlerContext.handler.SQL_BLOCK}}</pre>
+                    <pre>{{paramviewer()|json}}</pre>
+                </div>
+
+            </div>
+            <div role="list" ng-if="handlerContext.ExecutionIO&&handlerContext.ExecutionIO.HasTable && TableMeta.filteredData.length>0">
+                <table class="compact table-condensed table-bordered table-striped" style="border:none;border-spacing:unset">
+                    <tr>
+                        <th class="bg-primary" ng-repeat="colname in TableMeta.cols">{{colname}}</th>
+                    </tr>
+                    <tr ng-repeat="(row,raw) in TableMeta.filteredData">
+                        <td ng-repeat="(col,val) in TableMeta.cols">
+                            <!--style="max-width:200px"-->
+                            <div title="{{raw[col]}}">
+                                <a ng-bind="raw[col]" ng-if="linkouts[val]" href="" ng-click="link_out(val,raw)"></a>
+                                <pre ng-if="!linkouts[val]" style="padding:0;margin:0;border:none;background-color:transparent">{{raw[col]}}</pre>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <div class="row" ng-if="TableMeta.dataTotallSize>TableMeta.numPerPage">
+                    <div class="col-lg-2 col-md-3 col-sm-4">
+                        <pagination ng-model="TableMeta.currentPage" 
+                                    ng-change="pageChanged(TableMeta.currentPage)"
+                                    total-items="TableMeta.dataTotallSize"
+                                    max-size="5"
+                                    items-per-page="TableMeta.numPerPage"
+                                    boundary-links="true"
+                                    rotate="false"
+                                    previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;">
+                        </pagination>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-4 pagination">
+                        <div class="col-md-4 help-block">每页包含</div>
+                        <div class="col-md-4">
+                            <select ng-model="TableMeta.numPerPage"
+                                    ng-change="pageChanged(TableMeta.currentPage,!0)"
+                                    ng-options="xx for xx in pageSizeOptions"
+                                    class="form-control container-fluid"></select>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-sm-4 pagination">
+                        <span class="input-group">
+                            电梯直达:页#<input type="number" style="width: 40px" model-on-change="TableMeta.currentPage" />
+                            <button ng-click="pageChanged(TableMeta.currentPage,TableMeta.numPerPage)">Go</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="bg-active">
+                    总计:{{TableMeta.dataTotallSize}},  当前页: {{TableMeta.currentPage}}/{{ TableMeta.numPages()}}
+                    <span class="btn btn-primary" ng-click="Export()">导出所有数据!</span>
+                    <button class="btn btn-danger" ng-show="false" type="button" id="ngCSV"
+                            ng-csv="TableMeta.data"
+                            csv-header="TableMeta.cols"
+                            add-bom="true"
+                            filename="{{handlerContext.handler.HANDLER_NAME + '.csv'}}">
+                        保存文件[{{handlerContext.handler.HANDLER_NAME}}.csv]
+                    </button>
+                </div>
+            </div>
+            <div ng-if="TableMeta.filteredData.length==0 && !isLoading && handlerContext.ExecutionIO.HasTable" class="alert-success text-center">
+                没有数据!
+            </div>
+        </div>
+    </div>
+    <!--调 试
+        <div>
+            {{searchObject|json}}
+            <hr />
+            {{handlerContext.initValues|json}}
+            <hr />
+            {{paramsScaledValues|json}}
+
+            <hr />
+            {{EasyHandlerParams|json}}
+            <hr />
+            {{DAGdepends|json}}
+            <hr />
+            {{DAG|json}}
+            <hr />
+            {{OptionSelects|json}}
+            <hr />
+           <div ng-class="{'loader-wrapper':isLoading}">
+                <div class="loader"></div>
+            </div>
+        </div>
+
+        <div style="position:fixed;top:49%;left:40%">
+            <img src="~/Content/img/029.gif?v=1" alt="加载中..." ng-show="isLoading" />
+        </div>
+        -->
+
+</body>
+</html>
+
+<script src="~/Scripts/jquery/jquery.1.11.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/Scripts/angular/angular.js"></script>
+<script src="~/Scripts/angular/angular-sanitize.min.js"></script>
+<!--<script src="~/Scripts/angular-ui/ui-bootstrap-tpls.js"></script>-->
+<script src="~/Scripts/angular-ui/ui-bootstrap-tpls-1.0.3.js"></script>
+
+<script src="~/Scripts/angular-ui/bootstrap-ui-datetime-picker/datatime-picker.2.0.5.utf.js"></script>
+
+<script src="~/Scripts/angular/3rd/ng-csv.js"></script>
+<script src="~/Scripts/angular/i18n/angular-locale_zh-cn.js"></script>
+<script src="~/Scripts/3rd/loading-bar/loading-bar.js"></script>
+<script>
+    (function(){
+        'use strict';
+        if (!String.format)
+            String.format = function(format) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                return format.replace(/{(\d+)}/g, function(match, number) { 
+                    return typeof args[number] != 'undefined' ? args[number] : match;
+                });
+            };
+        window.showModalDialog = function(url){
+            window.open(url,null,'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no,width='
+                + screen.width * .8 + ', height=' + screen.height * .6 + ', top=' + screen.height * .1 + ', left=' + screen.width * .1);
+        }
+
+        var app = angular.module('Easyhandle', ['ngSanitize', 'ui.bootstrap', 'ui.bootstrap.datetimepicker', 'ngCsv', 'angular-loading-bar']);
+        app.constant('ngAuthSettings', {
+            apiServiceBaseUri: '../',
+            //apiServiceBaseUri: 'http://localhost:15569/',
+            //apiServiceBaseUri: 'http://ngauthenticationapi.azurewebsites.net/',15569
+            clientId: 'ngAuthApp'
+        });
+        app.constant('$location', {
+            search: function () {
+                return @Html.Raw(Json.Encode(ViewBag));
+
+            }
+        });
+        var model = @Html.Raw(Model);
+        (function updateHeaderTitle(title) {
+            if (window.self !== window.top) {
+                window.top.document.title = title;
+            }
+            window.document.title = title;
+        })(model.handler.HANDLER_NAME);        
+        app.directive('modelOnChange', function () {
+            return {
+                restrict: 'A',
+                scope: { 'modelOnChange': '=' },
+                link: function (scope, elm, attrs) {
+                    scope.$watch('modelOnChange', function (nVal) { elm.val(nVal); });
+                    elm.bind('blur', function () {
+                        var currentValue = elm.val();
+                        if (scope.modelOnChange !== currentValue) {
+                            scope.$apply(function () {
+                                scope.modelOnChange = currentValue;
+                            });
+                        }
+                    });
+                }
+            };
+        });
+        app.directive('ngSize', function() {
+            return {
+                restrict:'A',
+                link: function(scope, elem, attrs) {
+                    scope.$watch(attrs['ngSize'], function(size) {
+                        angular.element(elem).attr('size', size);
+                    });
+                }
+            };
+        });
+        app.controller('easyPLSQLCtrl', function ($scope, $http, ngAuthSettings, $location, $element, $timeout,$interval,$q,$filter,$document) {
+            var searchObject = $location.search()
+            $scope.uVs ={};
+            angular.forEach(searchObject.querys,function(value,key){ $scope.uVs[key.toUpperCase()] = value;});//URL携带的处理器参数,转换成大写
+            //searchObject.id = 17;
+            //console.log('---------', searchObject, ngAuthSettings, 'timepickerConfig', '$location', $location, 'searchObject', searchObject);
+            //timepickerConfig.showMeridian = false;
+            $scope.debug = $filter;//('date')(dt, 'yyyy-MM-dd HH:mm:ss');
+            $scope.handlerContext = {};
+            $scope.EasyHandlerParams = {};
+            //$scope.handlerContext.initValues 从服务端得到的原始值
+            // a.保存参数名,及其值,如果是选择型,保持value值或者不存在(如果不唯一)
+            //$scope.paramsScaledValues = {};
+            $scope.CalandarOpen = {};
+            // b.保持参数键,名称
+            $scope.dict = {};
+            // c.参数原始设置
+            // d.参数依赖关系
+            $scope.reverseDepends = {};
+            //只保存选项,如果初始化选择,那么需要对比value值
+            //$scope.OptionSelects = {}; //<key,object<name ,value>>
+            $scope.OptionSelecteds = {}; //<key,object<name ,value>>
+            $scope.selectHelpers ={};
+            $scope.good_select_size = function(key) {
+                if($scope.handlerContext.paramsScaledValues[key]) return 1;
+                else return  $scope.selectHelpers[key]?6:1;
+            }            
+            $scope.DrivesCtrl = {}; //驱动型参数及其是否有变化 <id,bool>
+            $scope.paramviewer = function () {
+                if ($scope.handlerContext.parameters)
+                    return $scope.handlerContext.parameters.map(function (e) { return { "参数": e.PARAM_NAME+"("+e.PARAM_NAME_C+")", "值": $scope.handlerContext.paramsScaledValues[e.PARAM_NAME] } })
+            }
+           
+            $scope.openCalandar = function (e, n) {
+                e.preventDefault();
+                e.stopPropagation();
+                $scope.CalandarOpen[n] = true;
+            }
+            //初始化每次从服务端迭代之后的控件数据(针对选项型)
+            function build_selected_options($scope) {
+                for (var vk in $scope.OptionSelects) {
+                    //paraEval($scope.paramsScaledValues, vk, $scope.EasyHandlerParams[vk].CONTROL_TYPE, $scope.OptionSelects, $scope.handlerContext.initValues)
+                    var the_ops = $scope.OptionSelects[vk],//选项
+                        control_type = $scope.EasyHandlerParams[vk].CONTROL_TYPE,
+                        current_valobj = $scope.handlerContext.paramsScaledValues[vk];//值
+
+                    if (control_type == 'TextBoxDDL') {
+                        if (the_ops instanceof Array) {
+                            var vv = [];
+                            for (var i = 0; i < the_ops.length; i++) {
+                                if (the_ops[i].Value == current_valobj) {
+                                    vv.push(the_ops[i])
+                                    break;
+                                }
+                            }
+                            $scope.OptionSelecteds[vk] = vv.length > 0 ? vv[0] : undefined;//可直接写成 left =vv[0],但是不易懂
+                        }
+                    }
+                    if (control_type == 'ListBoxMulti') {
+                        //var vv = [];
+                        if (the_ops instanceof Array && the_ops.length > 0) {
+                            for (var i = 0; i < the_ops.length; i++) {
+                                if (current_valobj instanceof Array) { //ListBox ,必须是list
+                                    //if (current_valobj.length > 0)
+                                    //    console.info("脚本告警,参数" + vk + "服务端待选时执行初始化!" + angular.toJson(current_valobj));
+                                    the_ops[i].selected = !!~current_valobj.indexOf(the_ops[i].Value)
+                                }
+                            }
+                        }
+                        //ListBox直接DMA到OptionSelects遍历
+                        //$scope.OptionSelecteds[vk] = vv.length > 0 ? vv : undefined;//当前选中的选项
+                    }
+                }
+            }
+            //页面加载时,绘制HTML元件及填充数据
+            function new_painting($scope, model) {
+                //console.log(response);
+                $scope.handlerContext = model;
+                $scope.dict = $scope.handlerContext.dict;
+                $scope.OptionSelects = $scope.handlerContext.OptionSelects;
+                for (var i = 0, ir = $scope.handlerContext.parameters; i < ir.length; i++) {
+                    var p = ir[i];
+                    var key = p.PARAM_NAME;
+                    $scope.EasyHandlerParams[key] = ir[i]; //最全字典
+                    $scope.handlerContext.paramsScaledValues[key] = $scope.handlerContext.paramsScaledValues[key];
+                }
+                ///生成参数关系依赖图
+                for (var j = 0; j < $scope.handlerContext.DAG.length; j++) {
+                    var side = $scope.handlerContext.DAG[j];
+                    var dependof = $scope.dict[side.TOKEY];  //依赖源
+                    if (!$scope.reverseDepends[dependof])
+                        $scope.reverseDepends[dependof] = [];
+                    $scope.reverseDepends[dependof].push(side.FROMKEY);
+                    $scope.DrivesCtrl[dependof] = true;//!!$scope.handlerContext.Nodescaled[side.TOKEY];//是否标量化
+                }
+                //从服务器的配置获取是后端分页还是前端分页!___setup_pagable_datatable___
+                (function (scope) {
+                    var ext = scope.handlerContext.handler.EXTENDS01, page_by_client;
+                    try {
+                        ext = eval("(" + ext + ")");
+                        page_by_client = ext['pagination'] == "client";
+                    } catch (e) {
+                        page_by_client = false
+                    }
+                    scope.isBackEndPaged = !page_by_client;
+                    scope.TableMeta = {
+                        filteredData: [],
+                        numPerPage: $scope.pageSizeOptions[2],
+                        currentPage: 1,
+                        dataTotallSize: -1,
+                        isBackEndPaged: scope.isBackEndPaged,
+                        numPages: function () {
+                            return Math.ceil(this.dataTotallSize / this.numPerPage);
+                        }
+                    };
+                })($scope);
+                build_selected_options($scope);
+            }
+            //迭代之后的 绘制HTML元件及填充数据,muteid为驱动元件ID
+            function iterate_painting($scope, response, muteid) {
+                var triggers = response.data.Triggers;
+                for (var tr = 0; tr < triggers.length; tr++) {
+                    var id = triggers[tr], key = $scope.dict[id];
+                    if (id != muteid) {
+                        $scope.OptionSelects[key] = response.data.OptionSelects[key];
+                        //
+                        if ($scope.handlerContext.paramsScaledValues[key] instanceof Array)  //目前只有字符串和数组
+                        {
+                            $scope.handlerContext.paramsScaledValues[key].length = 0;
+                            angular.extend($scope.handlerContext.paramsScaledValues[key], response.data.paramsScaledValues[key]);
+                        } else
+                            $scope.handlerContext.paramsScaledValues[key] = response.data.paramsScaledValues[key];
+                    }
+                }
+                build_selected_options($scope)
+            }
+
+            function setup_validators(scope) {
+                var validators = [];
+                for (var i = 0, ps = scope.handlerContext.parameters; i < ps.length; i++) {
+                    var paramitem = ps[i];
+                    validators.push({ Name: paramitem.PARAM_NAME, NameC: paramitem.PARAM_NAME_C, IsRequired: paramitem.IS_REQUIRED, RegPattern: paramitem.CONTROL_TYPE.indexOf("Text") >= 0 ? paramitem.VALID_REGULAR : null });
+                }
+                scope.debug = validators;
+                return function checkValidator() {
+                    var al = {}, errs = [];
+                    function _seterr(key, name, err) {
+                        if (al[key] instanceof Array)
+                            al[key].push(err);
+                        else
+                            al[key] = [err];
+                        errs.push("参数:" + name + " " + err);
+                    }
+                    for (var i = 0; i < validators.length; i++) {
+                        var v = validators[i];
+                        var vv = scope.handlerContext.paramsScaledValues[v.Name];
+                        if (v.IsRequired == 'Y' && !vv) {
+                            _seterr(v.Name, v.NameC, "必须");
+                        }
+                        if ((v.IsRequired == 'Y' || v.IsRequired != 'Y' && vv) && v.RegPattern) { //必填,或者不必填但是有值
+                            var reg = new RegExp(v.RegPattern);
+                            if (!reg.test(vv)) {
+                                _seterr(v.Name, v.NameC, "格式不正确");
+                            }
+                        }
+                    }
+                    if (errs.length) {
+                        alert(errs.join('\n'));
+                        return al;
+                    }
+                    return null;
+                }
+            }
+            try{
+                $scope.linkouts =  eval('('+ searchObject.linkOuts + ')');
+            }
+            catch(e){
+                $scope.linkouts = {'__err__':e};
+                console.warn('read linkout has err',e);
+            }
+        
+            $scope.link_out = function(colname,raw){
+                var set,f,cols = $scope.TableMeta.cols;
+                function extract(raw,refs){                
+                    return refs.split(',').map(function(v){ return raw[cols.indexOf(v)] });//,console.warn(raw,refs,debug),debug;                
+                }
+                set = $scope.linkouts[colname],set && (set = Array.prototype.filter.call(set,function(x){return x['onclick']})[0]) && set && (f =String.format(set['onclick'], extract(raw,String.prototype.toUpperCase.call(set['REFER_SETTINGS']))));
+                if(f){
+                    new Function(f)();
+                }
+            }
+            $scope.Eval_Select_ToPlainVals = function (key) {
+                try {
+                    $scope.handlerContext.paramsScaledValues[key] = $scope.OptionSelecteds[key].Value;
+                } catch (e) {
+                    $scope.handlerContext.paramsScaledValues[key] = undefined;
+                }
+            };
+
+            $scope.Eval_CheckList_ToPlainVals = function (key) {
+                var ops = $scope.OptionSelects[key];
+                var exists = $scope.handlerContext.paramsScaledValues[key];
+                var newadd = [],del=[],ordered=[];
+                //console.log('!Eval_CheckList_ToPlainVals===', angular.copy(ops), '-=-', angular.copy(exists));
+                //debugger;
+                if (ops instanceof Array && ops.length > 0) {
+                    for (var i = 0 ; i < ops.length; i++) {
+                        if (ops[i].selected){
+                            ordered.push(ops[i].Value);
+                            if(!exists || exists.indexOf(ops[i].Value)<0){
+                                newadd.push(ops[i].Value);//new selected
+                            }
+                        }else{
+                            if(exists && exists.indexOf(ops[i].Value)>=0){
+                                //deselected
+                                del.push(ops[i].value);
+                            }
+                        }
+                    }
+                }
+                //针对的angular对象观察
+                if (newadd.length > 0 || del.length>0) {
+                    $scope.handlerContext.paramsScaledValues[key] = ordered;
+                }
+            };
+
+
+            $scope.pageSizeOptions = [10, 20, 50, 100];
+            //执行查询/处理
+            $scope.run = function (iteration, iterationContext) {
+                if (!iteration) { //非分页迭代:即新查询,用户点击Run Button
+                    $scope.TableMeta.dataTotallSize = -1;
+                    $scope.TableMeta.currentPage = 1;
+                    if ($scope.checkouts = $scope.checkValidator()) {
+                        return;
+                    }
+                }
+                $scope.isLoading = true;
+
+                ///////////////////////////////////////////////////////
+                //setTimeout(function () {
+                //    $('body').addClass('loaded');
+                //    $('h1').css('color', '#222222');
+                //}, 100);
+                ///////////////////////////////////////////////////////
+
+                var exeurl = ngAuthSettings.apiServiceBaseUri + "api/xangular/ExecuteHandler/" + $scope.handlerContext.handler.HANDLER_ID;
+                if (!$scope.handlerContext.ExecutionIO) {
+                    //定义 输入输出中的输入
+                    $scope.handlerContext.ExecutionIO = { TableMeta: $scope.TableMeta };//HasTable 由后端决定!
+                }
+
+                var runContext = iterationContext || {
+                    handler: { HANDLER_ID: $scope.handlerContext.handler.HANDLER_ID },
+                    paramsScaledValues: $scope.handlerContext.paramsScaledValues,
+                    ExecutionIO: { TableMeta: $scope.TableMeta }
+                };
+                //handlerContext.parameters
+                //时间参数的特殊处理!
+                for (var i = 0, ps = $scope.handlerContext.parameters; i < ps.length; i++) {
+                    var p = ps[i];
+                    if (p.CONTROL_TYPE == "TextBoxDateTime") {
+                        var dt = runContext.paramsScaledValues[p.PARAM_NAME];
+                        if (angular.isDate(dt)) {
+                            //console.log('you fucked me~!', p, runContext.paramsScaledValues[p.PARAM_NAME], $filter('date')(dt, 'yyyy-MM-dd HH:mm:ss'))
+                            runContext.paramsScaledValues[p.PARAM_NAME] = $filter('date')(dt, 'yyyy-MM-dd HH:mm:ss');
+                        }
+                    }
+                }
+                return $http.post(exeurl, runContext).then(function (response) {
+                    //console.log('..ExecuteHandler..', response)
+                    $scope.handlerContext.ExecutionIO = response.data.ExecutionIO;
+                    if ($scope.handlerContext.ExecutionIO.HasTable) {
+                        ///赋值
+                        angular.extend($scope.TableMeta, $scope.handlerContext.ExecutionIO.TableMeta);
+                        if ($scope.isBackEndPaged) {
+                            //后端分页//服务端数据,就是分页数据
+                            $scope.TableMeta.filteredData = $scope.TableMeta.data;
+                        }
+                        else {
+                            //客户端分页
+                            var page = $scope.TableMeta.currentPage, pageSize = $scope.TableMeta.numPerPage;
+                            var begin = (page - 1) * pageSize, end = begin + pageSize;
+                            $scope.TableMeta.filteredData = $scope.TableMeta.data.slice(begin, end);
+                        }
+                    }
+                }, function (error) {
+                    console.log('..error..', error);
+                }).finally(function () {
+                    $scope.isLoading = false;
+                });
+            }
+            $scope.pageChanged = function (page, initPageIndex) {
+                if (initPageIndex) {
+                    $scope.TableMeta.currentPage = page = 1;
+                }
+                //$scope.TableMeta.numPerPage = pageSize;
+                var pageSize = $scope.TableMeta.numPerPage;
+                var begin = (page - 1) * pageSize
+                , end = begin + pageSize;
+                if (!$scope.TableMeta.isBackEndPaged)
+                    //客户端分页
+                    $scope.TableMeta.filteredData = $scope.TableMeta.data.slice(begin, end);
+                else {
+                    //服务端分页
+                    var iterationContext = {
+                        paramsScaledValues: $scope.handlerContext.paramsScaledValues,
+                        ExecutionIO: {
+                            HasTable: true,
+                            TableMeta: {
+                                isBackEndPaged: $scope.isBackEndPaged,
+                                currentPage: page,
+                                numPerPage: pageSize,
+                                dataTotallSize: $scope.TableMeta.dataTotallSize
+                            }
+                        }
+                    }
+                    $scope.run(true, iterationContext);//分页迭代
+                }
+            };
+            $scope.Export = function () {
+                if ($scope.isBackEndPaged) {
+                    //重新执行查询 转换为客户端分页!
+                    $scope.isBackEndPaged = $scope.TableMeta.isBackEndPaged = false;//客户端分页
+                    $scope.run().then(function () {
+                        $timeout(function () {
+                            $element.find('#ngCSV').click();
+                        })
+                    });
+                } else
+                    //重新执行查询,客户端分页!
+                    $timeout(function () {
+                        $element.find('#ngCSV').click();
+                    })
+            };
+            (function loaded(scope,model){
+                var interacturl = ngAuthSettings.apiServiceBaseUri + "api/xangular/ExecuteSubSql/";
+                //if (searchObject.id)
+                //    url = ngAuthSettings.apiServiceBaseUri + 'api/xangular/' + searchObject.id
+                //else if (searchObject.ec) {
+                //    url = ngAuthSettings.apiServiceBaseUri + 'api/xangular/ExCodeGet' + searchObject.ec
+                //} else {
+                //    return;
+                //}
+                new_painting(scope, model);
+                scope.checkValidator = setup_validators(scope);
+                ///观察所有,但是过滤出有依赖项的值
+                scope.$watch('handlerContext.paramsScaledValues', function (nv, ov) {
+                    //console.log('--old--', ov, '---new---', nv, '===equals===', ov == nv);
+                    if (nv != ov) {
+                        for (var prpty in nv) {
+                            if (scope.DrivesCtrl[prpty] && ov[prpty] != nv[prpty]) {
+                                if (ov[prpty] instanceof Object && ov[prpty] instanceof Object && JSON.stringify(ov[prpty]) == JSON.stringify(nv[prpty]))
+                                    continue;
+                                if (true) {//JSON.stringify(ov[prpty]) != JSON.stringify(nv[prpty])
+                                    //计算该属性影响的所有节点
+                                    //console.warn('check-old-new',JSON.stringify(ov[prpty]) , JSON.stringify(nv[prpty]));
+                                    scope.isLoading = true;
+                                    var muteid = scope.EasyHandlerParams[prpty].HANDLER_PARAM_ID;
+                                    //interacturl += muteid;
+                                    //console.log('\n', JSON.stringify($scope.handlerContext));
+                                    scope.handlerContext.Triggers = [muteid];
+                                    //$scope.handlerContext.paramsScaledValues[prpty] = nv[prpty];
+                                    $http.post(interacturl + muteid, JSON.stringify(scope.handlerContext)).then(  //paramz
+                                        function (response) {
+                                            iterate_painting(scope, response, muteid);
+                                        }, function (error) {
+                                            console.log(error)
+                                        }).finally(function () {
+                                            scope.isLoading = false;
+                                        });
+                                    break; //只观察一个参数变化,假设每次 驱动型参数触发只有1个
+                                }
+                            }
+                        }
+                    }
+
+                }, true);//值观察
+                //console.log(scope)
+                if (searchObject.querys.hasOwnProperty('__autorun')) {
+                    //debugger;
+                    var keywords = "ID,EC,__AUTORUN,__ENTRYCODE".split(','),para_vals = scope.handlerContext.paramsScaledValues,stop,interstop,repeat=0,
+                    fillval = function(){
+                        angular.forEach(searchObject.querys,function(value,key){
+                            //debugger;
+                            key = key.toUpperCase();
+                            if(!~keywords.indexOf(key) && Array.prototype.filter.call(scope.handlerContext.parameters,function(e){return e.PARAM_NAME == key})[0]){
+                                para_vals[key] = value;
+                            }
+                        });
+                    },latter = function(){
+                        function shoot(){clearInterval(interstop),$document.find('#goRun').click()}
+                        repeat++, repeat>5 && shoot();
+                        !stop && (stop = Array.prototype.every.call(Object.keys(para_vals),function(v){return para_vals[v]})) && shoot();
+                    };            
+                    //填入参数值之后,每200毫秒询问一次,如果备选参数全部就绪,那么执行,次数达到一定值之后,强行执行.
+                    //$timeout(fillval,0).then(setTimeout(latter,1000));
+                    $timeout(fillval,0),interstop = setInterval(latter,200);
+                    //fillval(),scope.$evalAsync(latter);
+                    //setTimeout(latter,2000);
+                
+                }
+            })($scope,model);//加载之后执行
+        });
+
+        //if (!iteration)
+        //    //不在分页查询
+        //    $scope.pageChanged(-1, $scope.TableMeta.numPerPage, true,true);
+    })();
+</script>

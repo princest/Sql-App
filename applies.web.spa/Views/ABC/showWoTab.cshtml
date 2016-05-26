@@ -1,0 +1,114 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>showWoTab</title>
+
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/app/trbackground.css" rel="stylesheet" />
+    <link href="~/Content/app/trbackground.css" rel="stylesheet" />
+    <link href="~/Content/app/abc.css" rel="stylesheet" />
+</head>
+<body ng-app="wotabApp" ng-controller="wotabCtrl">
+    <div>
+        <tabset>
+
+            <tab ng-repeat="(r,tab) in tabs" heading="{{tab.heading}}" active="tab.active" select="select(r)">
+                <img src="@Url.Content("~/Content/Images/ajax-loader-2.gif")" ng-show="tab.loading.v" />
+                <div ng-include src="'tab'+r+'.html'">
+                </div>
+            </tab>
+
+
+
+        </tabset>
+        <script type="text/ng-template" id="tab0.html">
+            <!--工单基本信息-->
+            <h1>基本信息:</h1>
+            <h2>页面开发中...</h2>
+        </script>
+        <script type="text/ng-template" id="tab1.html">
+            <!--自动接口-->
+            <h1>SPJK </h1>
+            <h2>暂未开放...</h2>
+        </script>
+        <script type="text/ng-template" id="tab2.html">
+            <!--处理日志-->
+            <handle data="readonlydata" ></handle>
+        </script>
+
+        <script type="text/ng-template" id="datatable-readonly.html">
+            <div>
+                <span class="btn btn-default" ng-class="{'btn-primary':filterit_}"
+                      ng-init="filterit_ = false" ng-click="filterit_=!filterit_">过滤..</span>
+                <span ng-show="filterit_">
+                    <span class="btn btn-default"
+                          ng-click="col_filtering(2)">列全显</span>
+                    <span class="btn btn-default"
+                          ng-click="col_filtering(1)">反显</span>
+                </span>
+            </div>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th ng-repeat="(col,n) in dscols" class="hide-fade" ng-show="cols_switcher[col]">
+                            <span style="cursor:pointer" ng-click="order(col, cols_sort_order[col])">
+                                <!--列头排序-->
+                                {{n}}<span class="pull-right" ng-class="arrow(cols_sort_order[col])"></span>
+                            </span>
+                        </th>
+                    </tr>
+                    <tr class="active" ng-show="filterit_">
+                        <th ng-repeat="(col,n) in dscols" class="hide-fade" ng-show="cols_switcher[col]" style="border:1px solid ;border-collapse:collapse">
+                            <div class="input-group">
+                                <span class="btn-link" style="cursor:pointer" title="隐藏列" ng-click="cols_switcher[col]=!1">&empty;</span>
+                                <span class="btn-link" style="cursor:pointer;font-size:1.6em;" title="清空" ng-click="cols_query[col]=''">&times;</span>
+
+                                <!--<span class="input-group-addon" style="cursor:pointer" title="隐藏列" ng-click="cols_switcher[col]=!1">&empty;</span>
+                                <span class="input-group-addon" style="cursor:pointer;font-size:1.6em;" title="清空" ng-click="cols_query[col]=''">&times;</span>
+                                -->
+                                <input type="text" placeholder="过滤" ng-model="cols_query[col]" style="width:100px" />
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-hide="filterOut(row.d)" ng-repeat="(r,row) in readonlydata"
+                        ng-init="cls=style_func(row.d,dscols)" ng-class="cls">
+                        <td ng-repeat="(col,n) in dscols" ng-show="cols_switcher[col]">
+                            <div ng-switch="coltypes[col]">
+                                <span ng-switch-when="datetime">
+                                    <span>{{row.d[col]|amDateFormat:'YY-MM-DD hh:mm:ss'}}</span>
+                                </span>
+                                <span ng-switch-default>
+                                    <span title="{{row.d[col]}}">{{row.d[col]}}</span>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </script>
+    </div>
+</body>
+</html>
+
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/Scripts/lib/angular/angular.js"></script>
+<script src="~/Scripts/lib/angular/angular-animate.min.js"></script>
+<script src="~/Scripts/lib/angular/i18n/angular-locale_zh-cn.js"></script>
+<script src="~/Scripts/lib/angular-ui/ui-bootstrap-tpls.js"></script>
+
+<script src="~/Scripts/moment.js"></script>
+<script src="~/Scripts/moment-zh-cn.js"></script>
+<script src="~/Scripts/lib/angular/3rd/angular-moment.min.js"></script>
+<script src="~/Scripts/Application/WoTabjs.js"></script>

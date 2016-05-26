@@ -1,0 +1,623 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@{
+    Layout = "~/Views/Shared/_layout_crack.cshtml";
+    ViewBag.ABC = "static";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>企信助手</title>
+    <link href="favicon.ico" type="image/x-icon" rel=icon>
+    <link href="~/Content/legacy/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/toastr.min.css" rel="stylesheet" />
+    <link href="~/Scripts/3rd/loading-bar/loading-bar.css?v=1" rel="stylesheet" />
+    <link href="~/Content/app/customtheme.css" rel="stylesheet" />
+    <link href="~/Content/app/abc.css" rel="stylesheet" />
+    <link href="~/Content/app/trbackground.css" rel="stylesheet" />
+    <style>
+        #loading-bar .bar {
+            top:60px;
+        }
+        #registerLink {
+            display:none;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function get_browser_info() {
+            var ua = navigator.userAgent, tem, M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+            if (/trident/i.test(M[1])) {
+                tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+                return { name: 'IE', version: (tem[1] || '') };
+            }
+            if (M[1] === 'Chrome') {
+                tem = ua.match(/\bOPR\/(\d+)/)
+                if (tem != null) { return { name: 'Opera', version: tem[1] }; }
+            }
+            M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+            if ((tem = ua.match(/version\/(\d+)/i)) != null) { M.splice(1, 1, tem[1]); }
+            return {
+                name: M[0],
+                version: M[1]
+            };
+        }
+        var browser = get_browser_info();
+        if (browser.name == 'MSIE' && parseInt(browser.version) <= 8) {
+            alert('你的浏览器太老了,请下载现代浏览器,如chrome浏览器,ie9+,见右上角链接!!');
+            throw new Error("Something went badly wrong!")
+        };
+    </script>
+    <div ng-app="abcApp" ng-controller="abcCtrl" class="clearfix ng-cloak">
+        <div class="container">
+
+            <div class="row" style="padding-bottom:1em">
+                <div class="input-group col-md-6 col-md-push-2">
+                    <input ng-if="!search.multi_s" type="text" class="form-control"
+                           ng-model="search.s" ng-change="search.intel(search.s)" focus-me="!search.multi_s"
+                           placeholder="订单号 /申请号 /号码 /servid /或者 一大波内容"
+                           tooltip-html-unsafe="若是工单号,在号码前面+w><br />若是spjk_id则在前面+sps"
+                    tooltip-placement="bottom"
+                    tooltip-trigger="mouseenter"
+                    tooltip-enable="!search.s"
+                    />
+                    <textarea ng-if="search.multi_s" type="text" class="form-control" style="width:600px"
+                              ng-model="search.s" ng-change="search.intel(search.s)" focus-me="search.multi_s"
+                              placeholder="订单号 /申请号 /号码 /servid"
+                              tooltip="注意!! 在多行模式下,取到的订单为最新订单(可能漏掉部分数据)"
+                              tooltip-placement="bottom"
+                              tooltip-trigger="mouseenter"
+                              rows="6" cols="48"></textarea>
+                    <span class="input-group-btn">
+                        <button class="btn btn-primary" ng-click="filtercos(search.s)">
+                            Go
+                        </button>
+                        <button class="btn btn-default" ng-click="search.s='';search.multi_s=false">
+                            <span class="glyphicon glyphicon-remove" title="清除"></span>
+                        </button>
+                        <button class="btn btn-warning" data-toggle="modal" data-target="#hisqry">
+                            <span class="glyphicon glyphicon-time" title="历史查询"></span>
+                        </button>
+                        <span class="danger alert-warning alert-dismissible" role="alert" ng-show="search.multi_s" title="在多行模式下,取到的订单为最新订单(可能漏掉部分数据)">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            提示:已进入多行模式
+                        </span>
+                    </span>
+                </div>             
+            </div>
+            <!--历史内容展示-->
+            <div class="modal" id="hisqry">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">你曾经查过什么?</h4>
+                        </div>
+                        <div class="modal-body">
+
+
+                            <table class="table table-hover">
+                                <tr>
+
+                                    <th class="col-md-7">
+                                        <div class="input-group">
+                                            <input type="text" ng-model="abctmp" class="form-control" placeholder=" 过滤" />
+                                        </div>
+                                    </th>
+                                    <th class="col-md-5"><button class="btn btn-danger pull-right" ng-click="clearstorage_search_all()" style="padding:0px 12px">清除历史记录</button></th>
+                                </tr>
+                                <tr class="col-md-12">
+
+                                    <th class="col-md-5">内容</th>
+                                    <th class="col-md-5">
+                                        查询时间
+                                        <span class="text-info" tooltip-placement="right" tooltip-class="text-info" tooltip-html-unsafe="显示最近两次和第一次的时间:
+                                            <br />
+                                            <i style='color:green'>注意记录时间的间隔至少5分钟,最多10条</i>">这是怎么来的?
+                                        </span>
+                                    </th>
+                                </tr>
+                                <tbody>
+                                <tbody class="col-md-12" ng-repeat="(col,row) in $storage.his_qrys | filter:{s:abctmp} | orderBy:'dl':true |storagefilter:$storage.currentPage track by col">
+                                    <tr ng-if="row">
+
+                                        <td class="col-md-6">
+                                            <button class="btn btn-primary" style="padding:0px 12px;" ng-click="filtercos(row.s,true);" data-dismiss="modal">重查</button>
+                                            {{row.s}}
+                                        </td>
+                                        <td class="col-md-5" ng-hide="search.history">
+                                            <span class="btn btn-lg btn-link" style="width:100px" ng-repeat="(xh,t) in row.dl|recentfilter:3 track by xh">
+                                                <span>
+                                                    <span class="text-success glyphicon glyphicon-mo" ng-click="row.showmore=!row.showmore" ng-show="row.dl.length>3 && xh==2">更多..</span>
+                                                </span>
+                                                <span title="{{t|amDateFormat:'YY-MM-DD HH:mm:ss'}}" style="width:100px">
+                                                    {{ t |amTimeAgo}}
+                                                </span>
+                                            </span>
+                                            <button class="btn btn-warning glyphicon glyphicon-remove pull-right" style="padding:0px 12px;" title="清除" ng-click="clearstorage_search_one(row)"></button>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="row.showmore">
+                                        <td></td>
+                                        <td colspan="2">
+                                            <span class="btn btn-lg btn-link" style="width:100px" ng-repeat="(xh,t) in row.dl|recentfilter:10 track by $index">
+                                                <span title="{{t|amDateFormat:'YY-MM-DD HH:mm:ss'}}">
+                                                    {{ t |amCalendar}}
+                                                </span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                            </table>
+                            <pagination ng-if="$storage.his_qrys.length>10"
+                                        ng-model="$storage.currentPage"
+                                        total-items="$storage.his_qrys.length"
+                                        max-size="5"
+                                        items-per-page="10"
+                                        boundary-links="true"
+                                        rotate="false"
+                                        previous-text="上一页" next-text="下一页" first-text="开始" last-text="结尾">
+                            </pagination>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+            <!--历史内容展示-->
+
+            <div ng-show="TableMeta.cos.data.length" class="row widget wviolet col-md-12  cswlist">
+                <div data-cc-widget-header title="订单列表" allow-collapse="true"></div>
+                <div class="widget-content col-md-12">
+                    <div class="col-md-6" ng-class="{'col-md-12 ':!chosenco.CO_NBR}">
+                        <table class="table table-hover">
+                            <tr ng-if="search.multi_s">
+                                <th ng-repeat="(col,n) in TableMeta.cos.cols">{{n}}</th>
+                            </tr>
+                            <tr ng-repeat="(row,raw) in TableMeta.cos.filteredData" ng-init="cols= TableMeta.cos.cols" ng-class="{'success':chosenco.CO_NBR==raw[0]}">
+                                <td ng-repeat="(col,n) in cols">
+                                    <div ng-if="cols[col]=='CO_NBR'">
+                                        <a href="#" ng-click="showco(raw[col]=='点击看订单'?raw[col-1]:raw[col],raw[cols.length-1])">{{raw[col]}}</a>
+                                    </div>
+                                    <div ng-if="col==cols.length-1">
+                                        <pre>{{raw[col]}}</pre>
+                                    </div>
+                                    <div ng-if="cols[col]!='CO_NBR'&&col!=cols.length-1">
+                                        {{raw[col]}}
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <pagination ng-if="TableMeta.cos.numPerPage < TableMeta.cos.dataTotallSize"
+                                    ng-model="TableMeta.cos.currentPage"
+                                    ng-change="TableMeta.cos.pageChanged(TableMeta.cos.currentPage)"
+                                    total-items="TableMeta.cos.dataTotallSize"
+                                    max-size="TableMeta.cos.maxSize"
+                                    items-per-page="TableMeta.cos.numPerPage"
+                                    boundary-links="true"
+                                    rotate="false"
+                                    previous-text="上一页" next-text="下一页" first-text="开始" last-text="结尾">
+                        </pagination>
+                    </div>
+                    <div class="col-md-6" ng-if="chosenco.CO_NBR">
+                        <table id="codetail" class="table table-hover">
+                            <tr>
+                                <th colspan="2">订单</th>
+                                <td colspan="3">{{chosenco.CO_NBR}}</td>
+                                <th colspan="3">一次性费用</th>
+                                <td colspan="4">{{chosenco.ONE_FEE}}</td>
+                            </tr>
+                            <tr>
+                                <th colspan="2">受理:</th>
+                                <td colspan="5"><pre>{{'受理人:' + chosenco.combo || (chosenco.SO_STAFF_NAME +'\n营业厅:'+ chosenco.WORKAREA + '-'+chosenco.SO_METH) }}</pre></td>
+                                <th colspan="2">商品</th>
+                                <td colspan="3">{{chosenco.PRO}}</td>
+
+                            </tr>
+                            <tr>
+                                <th colspan="3">服务提供:</th>
+                                <td colspan="9"><pre>{{chosenco["服务提供"]}}</pre></td>
+                            </tr>
+                            <tr>
+                                <th colspan="3">OSS状态</th>
+                                <td colspan="3" ng-class="blink[0]"><pre>{{chosenco.OSS_STSNAME}}</pre></td>
+                                <th colspan="2">-消息:</th>
+                                <td colspan="4">{{chosenco.OPERATIONAL_MSG}}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="12">
+                                    <span class="text-success">工具栏:</span>
+                                    <span class="input-group">
+                                        <span class="btn btn-warning" title="CRM施工环节" ng-click="open('co-crmtache',chosenco.CO_NBR)">CRM环节</span>
+                                        <span class="btn btn-warning" title='查看送O解析情况' ng-click="open('co-bo',chosenco.CO_NBR)">B-O</span>
+                                        <span class="btn btn-warning" title="未送O订单重新解析" ng-click="execproc('co-reparse',{'IP_CO_NBR': chosenco.CO_NBR })">重解析</span>
+                                        <span class="btn btn-warning" title="关联订单组(在途)" ng-click="open('co-onwaygroup',chosenco.CO_NBR)">组</span>
+                                        <span class="btn btn-warning" title="关联订单组(全部)" ng-click="open('co-allgroup',chosenco.CO_NBR)">关..</span>
+                                        <span class="btn btn-warning" title="修复问题订单(已判定异常)" ng-click="execproc('co-debug',{'IP_CO_NBR': chosenco.CO_NBR })">自动修复</span>
+                                        <span class="btn btn-warning" title="O闭环状态同CRM闭环状态" ng-click="execproc('co-close-sync',{'IP_CO_NBR': chosenco.CO_NBR })">闭环同步</span>
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                        <div>
+                            <alert type="{{alert['co'].type}}" ng-show="alert['co'].in" close="alert['co'].in=false"><pre>{{alert['co'].text}}</pre></alert>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div ng-show="TableMeta.sos.data.length && chosenco.SO_NBR" class="row widget wblue col-md-12  cswlist">
+                <div data-cc-widget-header title="{{'申请单列表 -订单- '+ chosenco.CO_NBR }}"
+                     allow-collapse="true"></div>
+                <div class="widget-content">
+                    <table class="table table-hover" id="socompact">
+                        <tr>
+                            <th>选择</th>
+                            <th>申请单</th>
+                            <th>业务种类</th>
+                            <th>动作</th>
+                            <th>OSS号码/专线号</th>
+                            <th>CRM帐号</th>
+                            <th>申请单状态</th>
+                            <th>当前工位</th>
+                            <th>服务ID/状态</th>
+                            <th>流程运态</th>
+
+                        </tr>
+                        <tr ng-repeat="(row,raw) in TableMeta.sos.data" ng-init="c = TableMeta.sos.cols;sonbr=raw[c.indexOf('SO_NBR')]" ng-class="{'success':chosenso.SO_NBR==sonbr}">
+                            <td>
+                                <label class=" radio" style="cursor:pointer">
+                                    <input type="radio" style="width:2em;height:1.5em;" name="so_nbr_radio" ng-click="showso(sonbr)" />
+                                </label>
+                            </td>
+                            <td>
+                                <a class="btn-link" ng-click="openSotab(sonbr)">{{sonbr}}</a>
+                                <!--<accordion>
+                                    <accordion-group>
+                                        <accordion-heading>
+                                            <span class="text-primary">{{sonbr}}</span>
+                                        </accordion-heading>
+                                        <span class="input-group">
+                                            <span class="btn btn-primary" title="查看SO" ng-click="open('so',sonbr,true)">SO</span>
+                                            <span class="btn btn-primary" title="查看handle" ng-click="open('so_handle',sonbr,true)">HANDLE</span>
+                                        </span>
+
+                                    </accordion-group>
+                                </accordion>-->
+                            </td>
+                            <td>
+                                <accordion>
+                                    <accordion-group>
+                                        <accordion-heading>
+                                            <span class="text-primary">{{raw[c.indexOf('SERV')]}}</span>
+                                        </accordion-heading>
+                                        <span class="input-group">
+                                            <span class="btn btn-primary" ng-click="open('so-prpty',sonbr,true)" title="查看属性">属性</span>
+                                            <span class="btn btn-primary" ng-click="open('so-cust',sonbr,true)" title="查看客户">客户</span>
+                                        </span>
+                                    </accordion-group>
+                                </accordion>
+
+                            </td>
+                            <td><a class="btn-link" ng-click="open('so-composed',sonbr,true)">{{raw[c.indexOf('CHG')]}}</a></td>
+                            <td>
+                                <accordion>
+                                    <accordion-group>
+                                        <accordion-heading>
+                                            <span class="text-primary">{{raw[c.indexOf('NBR')]}}</span>
+                                        </accordion-heading>
+                                        <div class="input-group">
+                                            <span class="btn btn-primary" title="so_acc_nbr信息" ng-click="open('so_acc_nbr',sonbr)">业务号</span>
+                                            <span class="btn btn-primary" title="在用号码物理号码-RM-CRM-OSS对比" ng-click="openlink('accnbr-phynbr-cmp',[raw[c.indexOf('NBR')]])">对比</span>
+                                        </div>
+                                    </accordion-group>
+                                </accordion>
+
+
+                            </td>
+                            <td>
+                                <accordion>
+                                    <accordion-group>
+                                        <accordion-heading>
+                                            <span class="text-primary">{{raw[c.indexOf('ACCOUNT_CRM')]}}</span>
+                                        </accordion-heading>
+                                        <span class="btn btn-primary" ng-click="open('so-jk-163',raw[c.indexOf('ACCOUNT_CRM')])">查看163指令</span>
+                                    </accordion-group>
+                                </accordion>
+                            </td>
+
+                            <td>{{raw[c.indexOf('SOSO_STS')]}}</td>
+                            <!--<td><pre ng-show="raw[c.indexOf('工位')]">{{raw[c.indexOf('工位')]}}</pre></td>-->
+                            <td>
+                                <span ng-init="ot_ = raw[c.indexOf('工位')].indexOf('\n')"
+                                      title="{{raw[c.indexOf('工位')].substring(ot_+1)}}"
+                                      ng-class="{'text-danger':ot_>=0}">
+                                    {{raw[c.indexOf('工位')].substring(0,ot_)}}
+                                </span>
+                            </td>
+                            <td>{{raw[c.indexOf('SERV_INST_ID_STS')]}}</td>
+                            <td>
+                                <accordion>
+                                    <accordion-group>
+                                        <accordion-heading>
+                                            <span title="{{raw[c.indexOf('PROC_INST_ID')]}}">
+                                                {{raw[c.indexOf('WF_STATE')]}}
+                                            </span>
+                                        </accordion-heading>
+                                        <span class="btn btn-primary" ng-disabled="TableMeta.archlevel" ng-click="execproc('so-cancel',{ip_so_nbr:sonbr})">单向撤销申请单流程</span>
+                                    </accordion-group>
+                                </accordion>
+
+                            </td>
+
+
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+            <div ng-show="chosenso.SO_NBR" class="row widget wlightblue col-md-12  cswlist">
+                <div data-cc-widget-header title="{{'工单列表 -申请单- '+ chosenso.SO_NBR }}"
+                     allow-collapse="true"></div>
+                <div class="widget-content">
+                    <table class="table table-hover table-bordered" id="wocompact">
+                        <thead>
+                            <tr>
+                                <th colspan="1" style="max-width:40px;width:40px">
+                                    <div class="btn-group">
+                                        <span title="工具集" class="text-success glyphicon glyphicon-wrench"></span>
+                                        <span title="处理历史" class="text-success glyphicon glyphicon-hand-right"></span>
+                                    </div>
+                                </th>
+                                <th>反</th>
+                                <th>工单号</th>
+                                <th>区域</th>
+                                <th>施工岗</th>
+                                <th>环节ID</th>
+                                <th>环节</th>
+                                <th>组合状态</th>
+                                <th>装拆</th>
+                                <th>局向</th>
+                                <th>备注</th>
+                                <th>回单人员</th>
+                                <th>派单时间</th>
+                                <th>警告时间</th>
+                                <th>完成时间</th>
+                            </tr>
+                        </thead>
+                        <tbody ng-repeat="(row,raw) in TableMeta.wos.data" ng-init="c = TableMeta.wos.cols;w=raw[c.indexOf('WO_NBR')];itemstates=TableMeta.wos.itemstates"
+                               ng-class="nice(raw,c)">
+                            <tr>
+                                <td colspan="1">
+                                    <div class="btn-group input-group input-group-btn">
+                                        <a>
+                                            <span class="glyphicon glyphicon-wrench"
+                                                  title="工具" style="cursor:pointer"
+                                                  data-style="expand-down"
+                                                  ng-click="itemstates[w].views[0]=!itemstates[w].views[0]">
+                                            </span>
+                                            <span class="glyphicon glyphicon-hand-right"
+                                                  title="看处理历史" style="cursor:pointer"
+                                                  ng-click="showwodet(w)"></span>
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="checkbox" ng-checked="1==raw[c.indexOf('DEAL_FLAG')]" disabled />
+                                </td>
+                                <td>
+                                    <a ng-click="openWotab(w,TableMata.archlevel)" class="btn-link">{{w}}</a>
+                                </td>
+                                <td>{{raw[c.indexOf('区')]}}</td>
+                                <td><div style="width:100px" title="{{raw[c.indexOf('工区')]}}">{{raw[c.indexOf('工区')]}}</div></td>
+                                <td>{{raw[c.indexOf('STEP_ID')]}}</td>
+                                <td>{{raw[c.indexOf('STEP')]}}</td>
+                                <td>{{raw[c.indexOf('RUN_STS0')]+'/'+raw[c.indexOf('BUSI_STS0')] +'/'+ raw[c.indexOf('RUN_STS')]+ raw[c.indexOf('BUSI_STS')]+ raw[c.indexOf('REASGN_COUNT')]}}</td>
+                                <td>{{raw[c.indexOf('ACT_TYPE0')]}}</td>
+                                <td>{{raw[c.indexOf('EXCH_NAME')]}}</td>
+                                <td><div style="width:100px" title="{{raw[c.indexOf('REMARKS')]}}">{{raw[c.indexOf('REMARKS')]}}</div></td>
+                                <td>{{raw[c.indexOf('RT_STAFF_NAME')]}}</td>
+                                <td title="{{raw[c.indexOf('ASGN_DATE')]|amCalendar}}">{{raw[c.indexOf('ASGN_DATE')]|amDateFormat:'YY-MM-DD HH:mm:ss'}}</td>
+                                <td title="{{raw[c.indexOf('ALARM_DATE')]|amCalendar}}">{{raw[c.indexOf('ALARM_DATE')]|amDateFormat:'YY-MM-DD HH:mm:ss'}}</td>
+                                <td title="{{raw[c.indexOf('COMPL_DATE')]|amCalendar}}">{{raw[c.indexOf('COMPL_DATE')]|amDateFormat:'YY-MM-DD HH:mm:ss'}}</td>
+                            </tr>
+                            <tr ng-if="itemstates[w].views[0]">
+                                <!--itemstates[wo_nbr].[0]代表工具集是否显示,[1]代表处理历史是否显示,[2]是加载处理历史特效-->
+                                <td colspan="8">
+                                    <div class="alert alert-dismissible" role="alert">
+                                        <button type="button" class="close"
+                                                ng-click="itemstates[w].views[0]=false"
+                                                data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <div class="container row">
+                                            <div class="input-group">
+                                                <span><strong>工具集:</strong></span>
+                                                <button class="btn btn-info" ng-disabled="TableMeta.archlevel" ng-click="execproc('wo-wi',{'ip_wo_nbr':w})">过岗</button>
+                                                <button class="btn btn-info" ng-disabled="TableMeta.archlevel" ng-click="execproc('wo-di',{'ip_wo_nbr':w})">重送</button>
+                                                <button class="btn btn-info" ng-disabled="TableMeta.archlevel" ng-click="execproc('wo-cancel',{'ip_wo_nbr':w})">发送追单</button>
+                                                <button class="btn btn-info" ng-click="openlink('wo-spjkcmd',[w])">看接口指令</button>
+                                                <button class="btn btn-info" ng-disabled="TableMeta.archlevel" ng-click="execproc('wo-rn',{'ip_wo_nbr':w})" title="作废工单">RN</button>
+                                                <button class="btn btn-info" ng-click="open('wo-edit',w,true)">修改wo</button>
+                                            </div>
+                                            <div>
+                                                <button type="button" class="close" ng-show="alert['wo'].in" ng-click="alert['wo'].in=false">
+                                                    <i>关闭</i>
+                                                </button>
+                                                <div class="{{'container alert-'+alert['wo'].type}}" ng-show="alert['wo'].in"><pre>{{alert['wo'].text}}</pre></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr ng-if="itemstates[w].views[1]">
+                                <td colspan="12">
+                                    <div class="alert alert-link alert-dismissible" role="alert">
+                                        <button type="button" class="close"
+                                                data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <div class="container row">
+                                            <div class="col-md-1">处理历史</div>
+                                            <table class="col-md-11  table table-bordered" id="whcompact" ng-show="!itemstates[w].views[2]">
+                                                <tr>
+                                                    <th></th>
+                                                    <th ng-repeat="(col,n) in TableMeta.wos.wohcols" class="alert-info">{{n}}</th>
+                                                </tr>
+                                                <tr ng-repeat="(row,raw) in itemstates[w].wohs.data" class="active">
+                                                    <td></td>
+                                                    <td ng-repeat="(col,n) in TableMeta.wos.wohcols">
+                                                        <div title="{{raw[col]}}">{{raw[col]}}</div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+        <script type="text/ng-template" id="myModalContent.html">
+            <div class="modal-header text-success">
+                <h4 class="modal-title">弹出窗口</h4>
+            </div>
+            <div class="modal-body ativa-scroll" ng-class="{'editing':bodyIsDateEditing}">
+                <div ng-show="sqlsetting.CLASS=='query'" style="margin-top:-1em">
+                    <div>
+                        <span class="btn btn-default" ng-click="insertNew()" title="追加" ng-disabled="!editing">插入</span>
+                        <span class="btn btn-default" ng-class="{'btn-primary':filterit_}"
+                              ng-init="filterit_ = false" ng-click="filterit_=!filterit_">过滤..</span>
+                        <span ng-show="filterit_">
+                            <span class="btn btn-default"
+                                  ng-click="col_filtering(2)">列全显</span>
+                            <span class="btn btn-default"
+                                  ng-click="col_filtering(1)">反显</span>
+                        </span>
+
+                    </div>
+                </div>
+
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th ng-show="editing">
+                                <span>&empty;</span>
+                            </th>
+                            <th ng-repeat="(col,n) in dscols" class="hide-fade" ng-show="cols_switcher[col]">
+                                <span style="cursor:pointer" ng-click="order(col, cols_sort_order[col])">
+                                    <!--列头排序-->
+                                    {{n}}<span class="pull-right" ng-class="arrow(cols_sort_order[col])"></span>
+                                </span>
+                            </th>
+                        </tr>
+                        <tr class="active" ng-show="filterit_">
+                            <th ng-show="editing">
+                                <span></span>
+                            </th>
+                            <th ng-repeat="(col,n) in dscols" class="hide-fade" ng-show="cols_switcher[col]" style="border:1px solid ;border-collapse:collapse">
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="cursor:pointer" title="隐藏列" ng-click="cols_switcher[col]=!1">&empty;</span>
+                                    <span class="input-group-addon" style="cursor:pointer;font-size:1.6em;" title="清空" ng-click="cols_query[col]=''">&times;</span>
+                                    <input type="text" placeholder="过滤" ng-model="cols_query[col]" style="width:100px" />
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-if="!allowedit">
+                        <tr ng-hide="filterOut(row.d)" ng-repeat="(r,row) in readonlydata"
+                            ng-init="cls=style_func(row.d,dscols)" ng-class="cls">
+                            <td ng-repeat="(col,n) in dscols" ng-show="cols_switcher[col]">
+                                <div ng-switch="coltypes[col]">
+                                    <span ng-switch-when="datetime">
+                                        <span>{{row.d[col]|amDateFormat:'YY-MM-DD HH:mm:ss'}}</span>
+                                    </span>
+                                    <span ng-switch-default>
+                                        <span title="{{row.d[col]}}">{{row.d[col]}}</span>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr><!--|arrayfilter:cols_query  prime[id][col] row['OLD'][col]-->
+                    </tbody>
+                    <tbody ng-if="allowedit">
+                        <tr ng-hide="filterOut(row,'NEW')" ng-repeat="(r,row) in datatable"
+                            ng-class="style_func(row.NEW,dscols)">
+                            <td ng-show="editing">
+                                <span style="cursor:pointer" title="删除这一行" ng-click="deleteTr(r)">&empty;</span>
+                            </td>
+                            <td ng-repeat="(col,n) in dscols" ng-show="cols_switcher[col]">
+                                <div ng-switch="coltypes[col]">
+                                    <div ng-switch-when="datetime">
+                                        <span ng-if="!editing">{{row['OLD'][col]|amDateFormat:'YY-MM-DD HH:mm:ss'}}</span>
+                                        <input ng-if="editing" type="text"
+                                               ng-model="row['NEW'][col]"
+                                               datetime-picker="yy-MM-dd HH:mm:ss" is-open="CalandarOpen[r*10000+col]"
+                                               ng-click="openCalandar($event,r*10000+col)" />
+                                    </div>
+                                    <div ng-switch-default>
+                                        <div ng-if="!editing" title="{{row['OLD'][col]}}">{{row['OLD'][col]}}</div>
+                                        <div ng-if="editing">
+                                            <input ng-model="row['NEW'][col]" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>               
+            </div>
+            <div class="modal-footer">
+
+                <span ng-show="allowedit">
+                    <!--高级模块操控数据-->
+                    <span class="pull-left">
+                        <input class="checkbox-inline" type="checkbox" ng-model="showdynsql" />显示SQL
+                        <textarea readonly ng-model="sqlsetting.SQL" ng-show="showdynsql" rows="{{calc_sqlrows(sqlsetting.SQL)}}" cols="{{sqlwraplength}}"></textarea>
+                        <button ng-click="retrieve()">刷新</button>
+                    </span>
+                    <span><input class="checkbox-inline" type="checkbox" ng-model="editing" ng-show="sqlsetting.ALLOWED_DML.length>0" ng-change="enableEdit(editing)" ng-disabled="disableEdit" />启用编辑</span>
+                </span>
+                <button class="btn" ng-class="{'btn-primary':editing}" ng-click="ok()" ng-disabled="!editing">提交</button>
+                <button class="btn btn-warning" ng-click="cancel()">关闭</button>
+            </div>
+        </script>
+    </div>
+
+
+
+</body>
+</html>
+
+
+<script src="~/Scripts/jquery/jquery.1.11.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<!--第三方-->
+
+<script src="~/Scripts/toastr.min.js"></script>
+<script src="~/Scripts/moment.js"></script>
+<script src="~/Scripts/moment-zh-cn.js"></script>
+<!--angular及其第三方-->
+<script src="~/Scripts/angular/angular.js"></script>
+<script src="~/Scripts/angular/angular-animate.min.js"></script>
+<script src="~/Scripts/angular/angular-sanitize.min.js"></script>
+<script src="~/Scripts/angular-ui/ui-bootstrap-tpls.js"></script>
+<script src="~/Scripts/angular-ui/bootstrap-ui-datetime-picker/datetime-picker.utf.js"></script>
+<script src="~/Scripts/angular/3rd/ng-csv.js"></script>
+<script src="~/Scripts/angular/i18n/angular-locale_zh-cn.js"></script>
+
+<script src="~/Scripts/angular/3rd/angular-moment.min.js"></script>
+<script src="~/Scripts/angular/3rd/angular-storage.min.js"></script>
+<script src="~/Scripts/3rd/loading-bar/loading-bar.js"></script>
+
+
+
+<script src="~/Scripts/App/boss-abc.js?v=1"></script>
